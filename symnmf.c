@@ -1,8 +1,5 @@
 #include "symnmf.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
+
 
 #define EPSILON (exp(-4))
 #define MAX_ITER 300
@@ -47,7 +44,7 @@ int runGoal(char * goal, char * filePath)
     }
     createMatrixFromList(vectorCount, vectorList, &vectorMatrix);
 
-    if(allocateMatrix(vectorCount, &similarityMatrix, &similarityMatrixP) == 1)
+    if(allocateMatrix(vectorCount, vectorCount, &similarityMatrix, &similarityMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
@@ -61,7 +58,7 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
-    if(allocateMatrix(vectorCount, &degreeMatrix, &degreeMatrixP) == 1)
+    if(allocateMatrix(vectorCount, vectorCount, &degreeMatrix, &degreeMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
@@ -75,7 +72,7 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
-    if(allocateMatrix(vectorCount, &normalSimilarityMatrix, &normalMatrixP) == 1)
+    if(allocateMatrix(vectorCount, vectorCount, &normalSimilarityMatrix, &normalMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
@@ -264,15 +261,15 @@ void calcNormalizedSimilarityMatrix(int vectorCount,
         degreeMatrix[i][i] = 1 / sqrt(degreeMatrix[i][i]);
     }
 
-    allocateMatrix(vectorCount, &tempMatrix, &p);
-    multiplyMatrix(vectorCount, degreeMatrix, similarityMatrix, tempMatrix);
-    multiplyMatrix(vectorCount, tempMatrix, degreeMatrix, normalSimilarityMatrix);
+    allocateMatrix(vectorCount, vectorCount, &tempMatrix, &p);
+    multiplyMatrix(vectorCount, vectorCount, vectorCount, degreeMatrix, similarityMatrix, tempMatrix);
+    multiplyMatrix(vectorCount, vectorCount, vectorCount, tempMatrix, degreeMatrix, normalSimilarityMatrix);
 
     freeTempMatrix(tempMatrix, p);
 }
 
 
-int calcAssociationMatrix (int vectorCount, double ** normalSimilarityMatrix, double ** associationMatrix)
+int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMatrix, double ** associationMatrix)
 {
     int i = 0;
     int j = 0;
@@ -280,29 +277,34 @@ int calcAssociationMatrix (int vectorCount, double ** normalSimilarityMatrix, do
     int functionStatus = 0;
     double temp = 0;
     double frobeniusNorm = 0;
-    double ** tempMatrix1 = NULL;
-    double * p1 = NULL;
-    double ** tempMatrix2 = NULL;
-    double * p2 = NULL;
-    double ** tempMatrix3 = NULL;
-    double * p3 = NULL;
 
     double ** transposedAssociationMatrix = NULL;
+    double * p1 = NULL;
+    double ** tempMatrix = NULL;
+    double * p2 = NULL;
     double ** denominatorMatrix = NULL;
+    double * p3 = NULL;
     double ** numeratorMatrix = NULL;
+    double * p4 = NULL;
+
 
     /* allocate temp matrices */
-    if (allocateMatrix(vectorCount, &tempMatrix1, &p1) == 1)
+    if (allocateMatrix(k, vectorCount, &transposedAssociationMatrix, &p1) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-    if (allocateMatrix(vectorCount, &tempMatrix2, &p2) == 1)
+    if (allocateMatrix(vectorCount, vectorCount, &tempMatrix, &p2) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-    if (allocateMatrix(vectorCount, &tempMatrix3, &p3) == 1)
+    if (allocateMatrix(vectorCount, k, &denominatorMatrix, &p3) == 1)
+    {
+        functionStatus = 1;
+        goto cleanup;
+    }
+    if (allocateMatrix(vectorCount, k, &numeratorMatrix, &p4) == 1)
     {
         functionStatus = 1;
         goto cleanup;
@@ -310,17 +312,14 @@ int calcAssociationMatrix (int vectorCount, double ** normalSimilarityMatrix, do
 
     while (iterCount < MAX_ITER && frobeniusNorm > EPSILON)
     {
-        transposedAssociationMatrix = tempMatrix1;
 
-        transposeMatrix(vectorCount, associationMatrix, transposedAssociationMatrix);
+        transposeMatrix(vectorCount, k, associationMatrix, transposedAssociationMatrix);
 
-        multiplyMatrix(vectorCount, associationMatrix, transposedAssociationMatrix, tempMatrix2);
-        multiplyMatrix(vectorCount, tempMatrix2, associationMatrix, tempMatrix1);
+        multiplyMatrix(vectorCount, k, vectorCount, associationMatrix, transposedAssociationMatrix, tempMatrix);
 
-        denominatorMatrix = tempMatrix1;
-        numeratorMatrix = tempMatrix2;
+        multiplyMatrix(vectorCount, vectorCount, k, tempMatrix, associationMatrix, denominatorMatrix);
 
-        multiplyMatrix(vectorCount, normalSimilarityMatrix, associationMatrix, numeratorMatrix);
+        multiplyMatrix(vectorCount, vectorCount, k ,normalSimilarityMatrix, associationMatrix, numeratorMatrix);
 
         frobeniusNorm = 0;
         for (i = 0; i < vectorCount; i++)
@@ -336,32 +335,35 @@ int calcAssociationMatrix (int vectorCount, double ** normalSimilarityMatrix, do
     }
 
     cleanup:
-    freeTempMatrix(tempMatrix1, p1);
-    freeTempMatrix(tempMatrix2, p2);
-    freeTempMatrix(tempMatrix3, p3);
+    freeTempMatrix(transposedAssociationMatrix, p1);
+    freeTempMatrix(tempMatrix, p2);
+    freeTempMatrix(denominatorMatrix, p3);
+    freeTempMatrix(numeratorMatrix, p4);
 
     return functionStatus;
 }
 
-void transposeMatrix(int n, double ** matrix, double ** resultMatrix)
+/* result (m x n) = (A (n x m))transposed */
+void transposeMatrix(int n, int m, double ** matrix, double ** resultMatrix)
 {
     int i = 0;
     int j = 0;
 
     for (i = 0; i < n; i++)
     {
-        for (j = 0; j < n; j++)
+        for (j = 0; j < m; j++)
         {
             resultMatrix[j][i] = matrix[i][j];
         }
     }
 }
 
-int allocateMatrix(int n, double *** matrix, double ** p)
+/* matrix = A (n x m) */
+int allocateMatrix(int n, int m, double *** matrix, double ** p)
 {
     int i = 0;
 
-    *p = (double *) malloc(n * n * sizeof (double ));
+    *p = (double *) malloc(n * m * sizeof (double ));
     if (*p == NULL)
     {
         printf("An Error Has Occurred\n");
@@ -375,7 +377,7 @@ int allocateMatrix(int n, double *** matrix, double ** p)
     }
     for (i = 0; i < n; i++)
     {
-        (*matrix)[i] = *p + (i * n);
+        (*matrix)[i] = *p + (i * m);
     }
 
     return 0;
@@ -410,9 +412,9 @@ double averageMatrix(int n, double ** matrix)
 }
 
 /*
- * result = A * B
+ * result (n x t) = A (n x m) * B (m x t)
  */
-void multiplyMatrix(int n, double ** matrixA, double ** matrixB, double ** matrixResult)
+void multiplyMatrix(int n, int m, int t, double ** matrixA, double ** matrixB, double ** matrixResult)
 {
     int i = 0;
     int j = 0;
@@ -421,10 +423,10 @@ void multiplyMatrix(int n, double ** matrixA, double ** matrixB, double ** matri
 
     for (i = 0; i < n; i++)
     {
-        for (j = 0; j < n; j++)
+        for (j = 0; j < t; j++)
         {
             sum = 0;
-            for (k = 0; k < n; k++)
+            for (k = 0; k < m; k++)
             {
                 sum += (matrixA[i][k] * matrixB[k][j]);
             }
@@ -460,6 +462,7 @@ void squaredDistance(int dimension, double coordinates1[], double coordinates2[]
 
 void printMatrix(int n, double ** matrix)
 {
+    n = 5;
     int j = 0;
     int i = 0;
 
