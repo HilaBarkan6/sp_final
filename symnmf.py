@@ -21,11 +21,23 @@ def run_goal(goal, k, file_path):
     if goal == GOAL_NORM:
         result = mysymnmfsp.calc_norm(vectors, vectors_count, dimension)
     if goal == GOAL_SYMNMF:
-        # get W (normal similarity)
         normal_similarity_matrix = mysymnmfsp.calc_norm(vectors, vectors_count, dimension)
-        # calculate initial H
-        # call function
-        pass
+        initial_H = calculate_initial_H(normal_similarity_matrix, k, vectors_count)
+        result = mysymnmfsp.calc_symnmf(normal_similarity_matrix, initial_H, k, vectors_count)
+
+    print_matrix(result)
+
+
+def print_list_float(lst):
+    for i in range(len(lst) - 1):
+        print(f"{lst[i]:.4f}", end=",")
+    print(f"{lst[len(lst) - 1]:.4f}")
+
+
+def print_matrix(matrix):
+    for i in range(len(matrix)):
+        print_list_float(matrix[i])
+
     
 def calculate_initial_H(normal_similarity_matrix, k, vector_count):
     m = 0
@@ -36,9 +48,8 @@ def calculate_initial_H(normal_similarity_matrix, k, vector_count):
             counter += 1
     m = m / counter
     np.random.seed(0)
-    np.random.uniform(0, 2*math.sqrt(m/k), (vector_count, k))
-  
-
+    initial_H = np.random.uniform(0, 2*math.sqrt(m/k), (vector_count, k)).tolist()
+    return initial_H
 
 
 def read_file(file_path):
@@ -62,6 +73,7 @@ def main():
         exit()
     goal = sys.argv[2]
     file_path = sys.argv[3]
+    run_goal(goal, k, file_path)
 
 
 
