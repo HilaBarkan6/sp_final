@@ -389,26 +389,26 @@ static PyMethodDef symnmfMethods[] = {
         "calc_sym",
         (PyCFunction) calc_sym,
         METH_VARARGS,
-        PyDoc_STR("This function calculates the similarity matrix. Please pass the following arguments: filePath")
+        PyDoc_STR("This function calculates the similarity matrix. Please pass the following arguments: data points, vectors count (N), dimension")
     },
     {
         "calc_ddg",
         (PyCFunction) calc_ddg,
         METH_VARARGS,
-        PyDoc_STR("This function calculates the degree matrix. Please pass the following arguments: filePath")
+        PyDoc_STR("This function calculates the degree matrix. Please pass the following arguments: data points, vectors count (N), dimension")
 
     },
     {
         "calc_norm",
         (PyCFunction) calc_norm,
         METH_VARARGS,
-        PyDoc_STR("This function calculates the normalized similarity matrix. Please pass the following arguments: filePath")
+        PyDoc_STR("This function calculates the normalized similarity matrix. Please pass the following arguments: data points, vectors count (N), dimension")
     },
     {
         "calc_symnmf",
         (PyCFunction) calc_symnmf,
         METH_VARARGS,
-        PyDoc_STR("This function performs the full symNMF. Please pass the following arguments: Intial H and W matrix")
+        PyDoc_STR("This function performs the full symNMF. Please pass the following arguments: Intial H matrix, W (normal similarity) matrix, K (number of clusters), vectors count")
     },
     { NULL, NULL, 0, NULL}
 
