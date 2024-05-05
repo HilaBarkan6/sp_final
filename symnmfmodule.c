@@ -408,7 +408,7 @@ static PyMethodDef symnmfMethods[] = {
         "calc_symnmf",
         (PyCFunction) calc_symnmf,
         METH_VARARGS,
-        PyDoc_STR("This function performs the full symNMF. Please pass the following arguments: Intial H matrix, W (normal similarity) matrix, K (number of clusters), vectors count")
+        PyDoc_STR("This function performs the full symNMF. Please pass the following arguments:  W (normal similarity) matrix, Intial H matrix, K (number of clusters), vectors count")
     },
     { NULL, NULL, 0, NULL}
 

@@ -12,6 +12,9 @@ GOAL_SYMNMF = "symnmf"
 def run_goal(goal, k, file_path):
     vectors = read_file(file_path)
     vectors_count = len(vectors)
+    if k >= vectors_count:
+        print("An Error Has Occurred") 
+        return
     dimension = len(vectors[0])
     result = None
     if goal == GOAL_SYM:
