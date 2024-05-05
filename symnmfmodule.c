@@ -8,11 +8,10 @@ static PyObject* calc_sym(PyObject *self, PyObject *args)
     int i = 0;
     int j = 0;
 
-    node * vectorList;
     int dimension = 0;
     int vectorCount = 0;
     double ** vectorMatrix = NULL;
-    double ** vectorMatrixP = NULL;
+    double * vectorMatrixP = NULL;
     double ** similarityMatrix = NULL;
     double * similarityMatrixP = NULL;
     PyObject * pySimilarityMatrix = NULL;
@@ -95,7 +94,7 @@ static PyObject* calc_ddg(PyObject *self, PyObject *args)
     int dimension = 0;
     int vectorCount = 0;
     double ** vectorMatrix = NULL;
-    double ** vectorMatrixP = NULL;
+    double * vectorMatrixP = NULL;
     double ** similarityMatrix = NULL;
     double * similarityMatrixP = NULL;
     double ** degreeMatrix = NULL;
@@ -187,7 +186,7 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
     int dimension = 0;
     int vectorCount = 0;
     double ** vectorMatrix = NULL;
-    double ** vectorMatrixP = NULL;
+    double * vectorMatrixP = NULL;
     double ** similarityMatrix = NULL;
     double * similarityMatrixP = NULL;
     double ** degreeMatrix = NULL;
@@ -353,9 +352,7 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
     }
 
     /* main logic */
-    calcAssociationMatrix(vectorCount, k, normalSimilarityMatrix, initialAssociationMatrix)
-
-
+    calcAssociationMatrix(vectorCount, k, normalSimilarityMatrix, initialAssociationMatrix);
 
     /*return value*/
     pyFinalAssociationMatrix = PyList_New(vectorCount);
@@ -374,7 +371,7 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
     cleanup:
 
     freeTempMatrix(normalSimilarityMatrix, normalSimilarityMatrixP);
-    freeTempMatrix(initialAssociationMatrix, initialAssociationMatrixP)
+    freeTempMatrix(initialAssociationMatrix, initialAssociationMatrixP);
 
     if (functionStatus == 0)
     {
@@ -409,7 +406,7 @@ static PyMethodDef symnmfMethods[] = {
     },
     {
         "calc_symnmf",
-        (PyCFunction)  ,
+        (PyCFunction) calc_symnmf,
         METH_VARARGS,
         PyDoc_STR("This function performs the full symNMF. Please pass the following arguments: Intial H and W matrix")
     },
