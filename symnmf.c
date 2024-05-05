@@ -107,15 +107,21 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     node * tail;
     double * tempVector = NULL;
     int i = 0;
+    int functionStatus = 0;
 
     f = fopen(filePath, "r");
     if (f == NULL)
     {
         printf("An Error Has Occurred\n");
-        return 1;
+        functionStatus = 1;
+        goto cleanup;
     }
 
-    fscanf(f, "%lf", &temp);
+    if(fscanf(f, "%lf", &temp) != 1){
+        printf("An Error Has Occurred\n");
+        functionStatus = 1;
+        goto cleanup;
+    }
     while (fscanf(f, ",%lf", &temp) == 1)
     {
         tempDimension++;
@@ -125,7 +131,11 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     fseek(f, 0, SEEK_SET);
 
     tempVector = (double *)malloc(*dimension * sizeof (double));
-    fscanf(f, "%lf", &(tempVector[i]));
+    if(fscanf(f, "%lf", &(tempVector[i])) != 1){
+        printf("An Error Has Occurred\n");
+        functionStatus = 1;
+        goto cleanup;
+    }
     i++;
     while (fscanf(f, ",%lf", &(tempVector[i])) == 1)
     {
@@ -145,9 +155,17 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
         tempVector[0] = temp;
         for (i = 1; i < *dimension - 1; i++)
         {
-            fscanf(f, "%lf,", &(tempVector[i]));
+            if(fscanf(f, "%lf,", &(tempVector[i])) != 1){
+                printf("An Error Has Occurred\n");
+                functionStatus = 1;
+                goto cleanup;
+            }
         }
-        fscanf(f, "%lf\n", &tempVector[i]);
+        if(fscanf(f, "%lf\n", &tempVector[i]) != 1){
+            printf("An Error Has Occurred\n");
+            functionStatus = 1;
+            goto cleanup;
+        }
 
         tail->next = (node *) malloc(sizeof (node));
         tail->next->vector = tempVector;
@@ -156,10 +174,13 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
         tempCount++;
     }
 
-
     *vectorList = list;
     *vectorCount = tempCount;
-    return 0;
+
+    cleanup:
+    fclose(f);
+    return functionStatus;
+
 }
 
 void freeVectorList(node * head)
