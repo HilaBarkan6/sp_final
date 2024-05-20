@@ -1,7 +1,7 @@
 #include "symnmf.h"
 
 
-#define EPSILON (exp(-4))
+#define EPSILON 0.0001
 #define MAX_ITER 300
 #define BETA 0.5
 
@@ -297,7 +297,7 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
     int iterCount = 0;
     int functionStatus = 0;
     double temp = 0;
-    double frobeniusNorm = 0;
+    double frobeniusNorm = 1;
 
     double ** transposedAssociationMatrix = NULL;
     double * p1 = NULL;
@@ -333,7 +333,6 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
 
     while (iterCount < MAX_ITER && frobeniusNorm > EPSILON)
     {
-
         transposeMatrix(vectorCount, k, associationMatrix, transposedAssociationMatrix);
 
         multiplyMatrix(vectorCount, k, vectorCount, associationMatrix, transposedAssociationMatrix, tempMatrix);
@@ -341,11 +340,10 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
         multiplyMatrix(vectorCount, vectorCount, k, tempMatrix, associationMatrix, denominatorMatrix);
 
         multiplyMatrix(vectorCount, vectorCount, k ,normalSimilarityMatrix, associationMatrix, numeratorMatrix);
-
         frobeniusNorm = 0;
         for (i = 0; i < vectorCount; i++)
         {
-            for (j = 0; j < vectorCount; j++)
+            for (j = 0; j < k; j++)
             {
                 temp = associationMatrix[i][j];
                 associationMatrix[i][j] = associationMatrix[i][j] * (1 - BETA + (BETA * (numeratorMatrix[i][j] / denominatorMatrix[i][j])));
@@ -483,13 +481,12 @@ void squaredDistance(int dimension, double coordinates1[], double coordinates2[]
 
 void printMatrix(int n, double ** matrix)
 {
-    n = 5;
     int j = 0;
     int i = 0;
 
     for (i = 0; i < n; i++)
     {
-        for (j = 0; j < n; j++)
+        for (j = 0; j < n - 1; j++)
         {
             printf("%.4f,", matrix[i][j]);
         }

@@ -20,7 +20,13 @@ def run_for_analysis(k, file_path):
     result = mysymnmfsp.calc_symnmf(normal_similarity_matrix, initial_H, k, vectors_count)
     y = []
     for row in result:
-        y.append(max(row))
+        max_entry = 0
+        max_entry_index = None
+        for i in range(len(row)):
+            if row[i] > max_entry:
+                max_entry_index = i
+                max_entry = row[i]
+        y.append(max_entry_index)
     return y
 
 
@@ -63,7 +69,7 @@ def calculate_initial_H(normal_similarity_matrix, k, vector_count):
     counter = 0
     for i in range(len(normal_similarity_matrix)):
         for j in range(len(normal_similarity_matrix[i])):
-            m+=normal_similarity_matrix[i][j]
+            m += normal_similarity_matrix[i][j]
             counter += 1
     m = m / counter
     np.random.seed(0)
