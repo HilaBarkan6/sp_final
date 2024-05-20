@@ -8,30 +8,38 @@ GOAL_DDG = "ddg"
 GOAL_NORM = "norm"
 GOAL_SYMNMF = "symnmf"
 
+
 def run_for_analysis(k, file_path):
+    # read file
     vectors = read_file(file_path)
     vectors_count = len(vectors)
     if k >= vectors_count:
         print("An Error Has Occurred") 
         return
     dimension = len(vectors[0])
+
+    # create association matrix
     normal_similarity_matrix = mysymnmfsp.calc_norm(vectors, vectors_count, dimension)
     initial_H = calculate_initial_H(normal_similarity_matrix, k, vectors_count)
-    result = mysymnmfsp.calc_symnmf(normal_similarity_matrix, initial_H, k, vectors_count)
-    y = []
-    for row in result:
+    association_matrix = mysymnmfsp.calc_symnmf(normal_similarity_matrix, initial_H, k, vectors_count)
+
+    # assign vectors to clusters
+    vectors_cluster_assignment = []
+    for row in association_matrix:
+        # find cluster with max score for vector
         max_entry = 0
         max_entry_index = None
         for i in range(len(row)):
             if row[i] > max_entry:
                 max_entry_index = i
                 max_entry = row[i]
-        y.append(max_entry_index)
-    return y
+        vectors_cluster_assignment.append(max_entry_index)
 
+    return vectors_cluster_assignment
 
 
 def run_goal(goal, k, file_path):
+    # read file
     vectors = read_file(file_path)
     vectors_count = len(vectors)
     if k >= vectors_count:
@@ -39,6 +47,7 @@ def run_goal(goal, k, file_path):
         return
     dimension = len(vectors[0])
     result = None
+
     if goal == GOAL_SYM:
         result = mysymnmfsp.calc_sym(vectors, vectors_count, dimension)
     if goal == GOAL_DDG:
@@ -73,7 +82,7 @@ def calculate_initial_H(normal_similarity_matrix, k, vector_count):
             counter += 1
     m = m / counter
     np.random.seed(0)
-    initial_H = np.random.uniform(0, 2*math.sqrt(m/k), (vector_count, k)).tolist()
+    initial_H = np.random.uniform(0, 2 * math.sqrt(m / k), (vector_count, k)).tolist()
     return initial_H
 
 
@@ -86,11 +95,12 @@ def read_file(file_path):
             vectors.append(num_coordinates)
     return vectors
 
+
 def main():
     if len(sys.argv) != 4:
         print("An Error Has Occurred") 
         exit()
-    k=0
+    k = 0
     try:
         k = int(sys.argv[1])
     except:
@@ -99,9 +109,6 @@ def main():
     goal = sys.argv[2]
     file_path = sys.argv[3]
     run_goal(goal, k, file_path)
-
-
-
 
 
 if __name__ == "__main__":

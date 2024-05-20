@@ -32,5 +32,4 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
 void printMatrix(int n, double ** matrix);
 int runGoal(char * goal, char * filePath);
 
-
 #endif

@@ -19,22 +19,21 @@ static PyObject* calc_sym(PyObject *self, PyObject *args)
     PyObject * pyDataPoints = NULL;
     PyObject * pyEntry = NULL;
 
-    /* This parses the Python arguments into a double (d)  variable named z and int (i) variable named n*/
+
     if(!PyArg_ParseTuple(args, "Oii",
                          &pyDataPoints,
                          &vectorCount,
                          &dimension)) {
-        return NULL; /* In the CPython API, a NULL value is never valid for a
-                        PyObject* so it is used to signal that an error has occurred. */
+        return NULL;
     }
 
-    /*create vector matrix*/
+    /* create vector matrix */
     if(allocateMatrix(vectorCount, dimension, &vectorMatrix, &vectorMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-    /*fill vector matrix*/
+    /* fill vector matrix */
     for (i = 0; i < vectorCount; i++)
     {
         pyCurrentRow = PyList_GetItem(pyDataPoints, i);
@@ -46,16 +45,14 @@ static PyObject* calc_sym(PyObject *self, PyObject *args)
     }
     
     /* main logic */
-
     if(allocateMatrix(vectorCount, vectorCount, &similarityMatrix, &similarityMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-     
     calcSimilarityMatrix(dimension, vectorCount, vectorMatrix, similarityMatrix);
 
-
+    /* build result for python */
     pySimilarityMatrix = PyList_New(vectorCount);
     for (i = 0; i < vectorCount; i++)
     {
@@ -104,22 +101,20 @@ static PyObject* calc_ddg(PyObject *self, PyObject *args)
     PyObject * pyDataPoints = NULL;
     PyObject * pyEntry = NULL;
 
-    /* This parses the Python arguments into a double (d)  variable named z and int (i) variable named n*/
     if(!PyArg_ParseTuple(args, "Oii",
                          &pyDataPoints,
                          &vectorCount,
                          &dimension)) {
-        return NULL; /* In the CPython API, a NULL value is never valid for a
-                        PyObject* so it is used to signal that an error has occurred. */
+        return NULL;
     }
 
-    /*create vector matrix*/
+    /* create vector matrix */
     if(allocateMatrix(vectorCount, dimension, &vectorMatrix, &vectorMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-    /*fill vector matrix*/
+    /* fill vector matrix */
     for (i = 0; i < vectorCount; i++)
     {
         pyCurrentRow = PyList_GetItem(pyDataPoints, i);
@@ -148,7 +143,7 @@ static PyObject* calc_ddg(PyObject *self, PyObject *args)
 
     calcDiagonalDegreeMatrix(vectorCount, similarityMatrix, degreeMatrix);
 
-
+    /* build python return value */
     pyDegreeMatrix = PyList_New(vectorCount);
     for (i = 0; i < vectorCount; i++)
     {
@@ -198,23 +193,20 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
     PyObject * pyDataPoints = NULL;
     PyObject * pyEntry = NULL;
 
-
-    /* This parses the Python arguments into a double (d)  variable named z and int (i) variable named n*/
     if(!PyArg_ParseTuple(args, "Oii",
                          &pyDataPoints,
                          &vectorCount,
                          &dimension)) {
-        return NULL; /* In the CPython API, a NULL value is never valid for a
-                        PyObject* so it is used to signal that an error has occurred. */
+        return NULL;
     }
 
-    /*create vector matrix*/
+    /* create vector matrix */
     if(allocateMatrix(vectorCount, dimension, &vectorMatrix, &vectorMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-    /*fill vector matrix*/
+    /* fill vector matrix */
     for (i = 0; i < vectorCount; i++)
     {
         pyCurrentRow = PyList_GetItem(pyDataPoints, i);
@@ -224,7 +216,6 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
             vectorMatrix[i][j] = PyFloat_AsDouble(pyEntry);
         }
     }
-
 
     /* main logic */
 
@@ -252,8 +243,7 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
 
     calcNormalizedSimilarityMatrix(vectorCount, similarityMatrix, degreeMatrix, normalSimilarityMatrix);
 
-
-
+    /* build python return value */
     pyNormalMatrix = PyList_New(vectorCount);
     for (i = 0; i < vectorCount; i++)
     {
@@ -264,7 +254,6 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
         }
         PyList_SetItem(pyNormalMatrix, i, pyCurrentRow);
     }
-
 
 /* free everything */
     cleanup:
@@ -283,13 +272,12 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
     }
 }
 
+
 static PyObject* calc_symnmf(PyObject *self, PyObject *args)
 {
     int functionStatus = 0;
     int i = 0;
     int j = 0;
-
-
     int vectorCount = 0;
     int k = 0;
 
@@ -304,32 +292,28 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
     PyObject * pyEntry = NULL;
     PyObject * pyFinalAssociationMatrix = NULL;
 
-    /* This parses the Python arguments into a double (d)  variable named z and int (i) variable named n*/
     if(!PyArg_ParseTuple(args, "OOii",
                          &pyNormalSimilarityMatrix,
                          &pyInitialAssociationMatrix,
                          &k,
                          &vectorCount
                          )) {
-        return NULL; /* In the CPython API, a NULL value is never valid for a
-                        PyObject* so it is used to signal that an error has occurred. */
+        return NULL;
     }
 
-    /*create normal similarity matrix*/
     if(allocateMatrix(vectorCount, vectorCount, &normalSimilarityMatrix, &normalSimilarityMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
 
-    /*create initial matrix*/
     if(allocateMatrix(vectorCount, k, &initialAssociationMatrix, &initialAssociationMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
 
-    /*fill the normal similarity matrix*/
+    /* fill the normal similarity matrix */
     for (i = 0; i < vectorCount; i++)
     {
         pyCurrentRow = PyList_GetItem(pyNormalSimilarityMatrix, i);
@@ -340,7 +324,7 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
         }
     }
 
-    /*fill the initial matrix */
+    /* fill the initial matrix */
     for (i = 0; i < vectorCount; i++)
     {
         pyCurrentRow = PyList_GetItem(pyInitialAssociationMatrix, i);
@@ -354,7 +338,7 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
     /* main logic */
     calcAssociationMatrix(vectorCount, k, normalSimilarityMatrix, initialAssociationMatrix);
 
-    /*return value*/
+    /* return value */
     pyFinalAssociationMatrix = PyList_New(vectorCount);
     for (i = 0; i < vectorCount; i++)
     {
@@ -365,7 +349,6 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
         }
         PyList_SetItem(pyFinalAssociationMatrix, i, pyCurrentRow);
     }
-
 
     /* free everything */
     cleanup:

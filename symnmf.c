@@ -37,6 +37,7 @@ int runGoal(char * goal, char * filePath)
     double ** normalSimilarityMatrix = NULL;
     double * normalMatrixP = NULL;
 
+    /* read vectors from file */
     if(readVectorsFromFile(filePath, &vectorList, &dimension, &vectorCount) == 1)
     {
         functionStatus = 1;
@@ -44,12 +45,12 @@ int runGoal(char * goal, char * filePath)
     }
     createMatrixFromList(vectorCount, vectorList, &vectorMatrix);
 
+    /* calculate similarity */
     if(allocateMatrix(vectorCount, vectorCount, &similarityMatrix, &similarityMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-
     calcSimilarityMatrix(dimension, vectorCount, vectorMatrix, similarityMatrix);
 
     if (strcmp(goal, "sym") == 0)
@@ -58,12 +59,12 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
+    /* calculate ddg */
     if(allocateMatrix(vectorCount, vectorCount, &degreeMatrix, &degreeMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-
     calcDiagonalDegreeMatrix(vectorCount, similarityMatrix, degreeMatrix);
 
     if (strcmp(goal, "ddg") == 0)
@@ -72,12 +73,12 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
+    /* calculate normal similarity */
     if(allocateMatrix(vectorCount, vectorCount, &normalSimilarityMatrix, &normalMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
-
     calcNormalizedSimilarityMatrix(vectorCount, similarityMatrix, degreeMatrix, normalSimilarityMatrix);
 
     if (strcmp(goal, "norm") == 0)
@@ -117,6 +118,7 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
         goto cleanup;
     }
 
+    /* calculate dimension */
     if(fscanf(f, "%lf", &temp) != 1){
         printf("An Error Has Occurred\n");
         functionStatus = 1;
@@ -130,6 +132,7 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
 
     fseek(f, 0, SEEK_SET);
 
+    /* read first vector */
     tempVector = (double *)malloc(*dimension * sizeof (double));
     if(fscanf(f, "%lf", &(tempVector[i])) != 1){
         printf("An Error Has Occurred\n");
@@ -143,6 +146,7 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     }
     i = 0;
 
+    /* read vectors until EOF */
     list = (node *)malloc(sizeof (node));
     list->vector = tempVector;
     list->next = NULL;
@@ -177,7 +181,6 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     *vectorList = list;
     *vectorCount = tempCount;
 
-
     cleanup:
     fclose(f);
     return functionStatus;
@@ -199,6 +202,10 @@ void freeVectorList(node * head)
     }
 }
 
+/*
+ * the file is read into a linked list as we don't know how many vectors are in it.
+ * In this function we convert the list to a matrix
+ */
 void createMatrixFromList(int vectorCount, node * vectorList, double *** vectorMatrix)
 {
     int i = 0;
@@ -242,7 +249,7 @@ void calcSimilarityMatrix(int dimension, int vectorCount, double ** vectorMatrix
                         vectorMatrix[i],
                         vectorMatrix[j],
                         &dist);
-                similarityMatrix[i][j] = exp((0 - dist)/2);
+                similarityMatrix[i][j] = exp((0 - dist) / 2);
             }
         }
     }
@@ -278,6 +285,7 @@ void calcNormalizedSimilarityMatrix(int vectorCount,
     int i = 0;
     double ** tempMatrix;
     double * p;
+
     for (i = 0; i < vectorCount; i++)
     {
         degreeMatrix[i][i] = 1 / sqrt(degreeMatrix[i][i]);
@@ -308,7 +316,6 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
     double * p3 = NULL;
     double ** numeratorMatrix = NULL;
     double * p4 = NULL;
-
 
     /* allocate temp matrices */
     if (allocateMatrix(k, vectorCount, &transposedAssociationMatrix, &p1) == 1)
@@ -342,6 +349,8 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
 
         multiplyMatrix(vectorCount, vectorCount, k ,normalSimilarityMatrix, associationMatrix, numeratorMatrix);
         frobeniusNorm = 0;
+
+        /* update the associationMatrix overriding the previous one */
         for (i = 0; i < vectorCount; i++)
         {
             for (j = 0; j < k; j++)
@@ -415,21 +424,6 @@ void freeTempMatrix(double ** matrix, double * p)
     }
 }
 
-double averageMatrix(int n, double ** matrix)
-{
-    int i = 0;
-    int j = 0;
-    double sum = 0;
-
-    for (i = 0; i < n; i++)
-    {
-        for (j = 0; j < n; j ++)
-        {
-            sum += matrix[i][j];
-        }
-    }
-    return sum / (n * n);
-}
 
 /*
  * result (n x t) = A (n x m) * B (m x t)
