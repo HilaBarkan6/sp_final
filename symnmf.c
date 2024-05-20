@@ -54,7 +54,7 @@ int runGoal(char * goal, char * filePath)
 
     if (strcmp(goal, "sym") == 0)
     {
-        printMatrix(vectorCount, similarityMatrix);
+        /*printMatrix(vectorCount, similarityMatrix);*/
         goto cleanup;
     }
 
