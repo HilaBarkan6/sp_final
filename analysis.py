@@ -1,8 +1,5 @@
-from sklearn.datasets import make_blobs
-from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import sys
-sys.path.insert(1, 'C:\Projects\Software Project\sp_hw1\Python')
 import kmeans as hw1
 import symnmf 
 
