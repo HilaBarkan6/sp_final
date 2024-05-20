@@ -177,6 +177,9 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     *vectorList = list;
     *vectorCount = tempCount;
 
+    printf("%d\n", vectorCount);
+    printf("%d\n", dimension);
+
     cleanup:
     fclose(f);
     return functionStatus;
