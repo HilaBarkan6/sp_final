@@ -8,6 +8,22 @@ GOAL_DDG = "ddg"
 GOAL_NORM = "norm"
 GOAL_SYMNMF = "symnmf"
 
+def run_for_analysis(k, file_path):
+    vectors = read_file(file_path)
+    vectors_count = len(vectors)
+    if k >= vectors_count:
+        print("An Error Has Occurred") 
+        return
+    dimension = len(vectors[0])
+    normal_similarity_matrix = mysymnmfsp.calc_norm(vectors, vectors_count, dimension)
+    initial_H = calculate_initial_H(normal_similarity_matrix, k, vectors_count)
+    result = mysymnmfsp.calc_symnmf(normal_similarity_matrix, initial_H, k, vectors_count)
+    y = []
+    for row in result:
+        y.append(max(row))
+    return y
+
+
 
 def run_goal(goal, k, file_path):
     vectors = read_file(file_path)
