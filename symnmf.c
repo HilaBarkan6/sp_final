@@ -37,20 +37,22 @@ int runGoal(char * goal, char * filePath)
     double ** normalSimilarityMatrix = NULL;
     double * normalMatrixP = NULL;
 
-    /* read vectors from file */
     if(readVectorsFromFile(filePath, &vectorList, &dimension, &vectorCount) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
+    // CR: The way you are working here with vector Matrix is very dangerous, yet I think it works. Best would have been to copy everything to a new matrix that is the full owner of all 
+    // CR: all of the data and releasing the "vectors".
     createMatrixFromList(vectorCount, vectorList, &vectorMatrix);
 
-    /* calculate similarity */
+    // CR: I might have missed it, but found no check to make sure that the mtrix is square.
     if(allocateMatrix(vectorCount, vectorCount, &similarityMatrix, &similarityMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
+
     calcSimilarityMatrix(dimension, vectorCount, vectorMatrix, similarityMatrix);
 
     if (strcmp(goal, "sym") == 0)
@@ -59,12 +61,12 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
-    /* calculate ddg */
     if(allocateMatrix(vectorCount, vectorCount, &degreeMatrix, &degreeMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
+
     calcDiagonalDegreeMatrix(vectorCount, similarityMatrix, degreeMatrix);
 
     if (strcmp(goal, "ddg") == 0)
@@ -73,12 +75,12 @@ int runGoal(char * goal, char * filePath)
         goto cleanup;
     }
 
-    /* calculate normal similarity */
     if(allocateMatrix(vectorCount, vectorCount, &normalSimilarityMatrix, &normalMatrixP) == 1)
     {
         functionStatus = 1;
         goto cleanup;
     }
+
     calcNormalizedSimilarityMatrix(vectorCount, similarityMatrix, degreeMatrix, normalSimilarityMatrix);
 
     if (strcmp(goal, "norm") == 0)
@@ -88,8 +90,10 @@ int runGoal(char * goal, char * filePath)
     }
 
     cleanup:
+    // CR: It is usually a good idea to put in NULL after freeing to avoid bugs.
     freeVectorList(vectorList);
     freeVectorMatrix(vectorMatrix);
+    // CR: Consider changing the name "temp matrix"
     freeTempMatrix(similarityMatrix, similarityMatrixP);
     freeTempMatrix(degreeMatrix, degreeMatrixP);
     freeTempMatrix(normalSimilarityMatrix, normalMatrixP);
@@ -98,6 +102,8 @@ int runGoal(char * goal, char * filePath)
 
 }
 
+//CR: While I did not find a leak here, when this function fails it returns something that is half broken and needs to be freed. Very akward and can lead to leaks.
+//CR: When a function fails it should free everything itself. We do this by utilizing a pattern of "transfer ownership" from this function to the outside.
 int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, int * vectorCount)
 {
     FILE * f = NULL;
@@ -118,7 +124,6 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
         goto cleanup;
     }
 
-    /* calculate dimension */
     if(fscanf(f, "%lf", &temp) != 1){
         printf("An Error Has Occurred\n");
         functionStatus = 1;
@@ -132,7 +137,6 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
 
     fseek(f, 0, SEEK_SET);
 
-    /* read first vector */
     tempVector = (double *)malloc(*dimension * sizeof (double));
     if(fscanf(f, "%lf", &(tempVector[i])) != 1){
         printf("An Error Has Occurred\n");
@@ -146,13 +150,13 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     }
     i = 0;
 
-    /* read vectors until EOF */
     list = (node *)malloc(sizeof (node));
     list->vector = tempVector;
     list->next = NULL;
     tail = list;
     tempCount++;
 
+    //CR: Will not work if the matrix dimension is 1
     while (fscanf(f, "%lf,", &temp) == 1)
     {
         tempVector = (double *)malloc(*dimension * sizeof (double));
@@ -193,6 +197,7 @@ void freeVectorList(node * head)
     while (head != NULL)
     {
         temp = head;
+        // CR: I think this if is not needed
         if (head->vector != NULL)
         {
             free(head->vector);
@@ -202,10 +207,6 @@ void freeVectorList(node * head)
     }
 }
 
-/*
- * the file is read into a linked list as we don't know how many vectors are in it.
- * In this function we convert the list to a matrix
- */
 void createMatrixFromList(int vectorCount, node * vectorList, double *** vectorMatrix)
 {
     int i = 0;
@@ -249,13 +250,14 @@ void calcSimilarityMatrix(int dimension, int vectorCount, double ** vectorMatrix
                         vectorMatrix[i],
                         vectorMatrix[j],
                         &dist);
-                similarityMatrix[i][j] = exp((0 - dist) / 2);
+                // CR: Consider changin 0 to "(double)0", not sure it matters.
+                similarityMatrix[i][j] = exp((0 - dist)/2);
             }
         }
     }
 }
 
-
+// CR: Consider changing parameter names like vector count to width or size or n. Will simplify readability across the board.
 void calcDiagonalDegreeMatrix(int vectorCount, double ** similarityMatrix, double ** degreeMatrix)
 {
     int i = 0;
@@ -277,15 +279,16 @@ void calcDiagonalDegreeMatrix(int vectorCount, double ** similarityMatrix, doubl
     }
 }
 
+// CR: Consider adding in documentation that the degree matrix is destroyed
 void calcNormalizedSimilarityMatrix(int vectorCount,
                                     double ** similarityMatrix,
                                     double ** degreeMatrix,
                                     double ** normalSimilarityMatrix)
 {
     int i = 0;
+    // CR: Initalize with NULL
     double ** tempMatrix;
     double * p;
-
     for (i = 0; i < vectorCount; i++)
     {
         degreeMatrix[i][i] = 1 / sqrt(degreeMatrix[i][i]);
@@ -317,6 +320,7 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
     double ** numeratorMatrix = NULL;
     double * p4 = NULL;
 
+
     /* allocate temp matrices */
     if (allocateMatrix(k, vectorCount, &transposedAssociationMatrix, &p1) == 1)
     {
@@ -339,6 +343,7 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
         goto cleanup;
     }
 
+    // CR: Should be ">= EPSILON"
     while (iterCount < MAX_ITER && frobeniusNorm > EPSILON)
     {
         transposeMatrix(vectorCount, k, associationMatrix, transposedAssociationMatrix);
@@ -349,8 +354,6 @@ int calcAssociationMatrix (int vectorCount, int k, double ** normalSimilarityMat
 
         multiplyMatrix(vectorCount, vectorCount, k ,normalSimilarityMatrix, associationMatrix, numeratorMatrix);
         frobeniusNorm = 0;
-
-        /* update the associationMatrix overriding the previous one */
         for (i = 0; i < vectorCount; i++)
         {
             for (j = 0; j < k; j++)
@@ -388,6 +391,7 @@ void transposeMatrix(int n, int m, double ** matrix, double ** resultMatrix)
 }
 
 /* matrix = A (n x m) */
+// CR: While this works, I think the most elegant way to do this is to just use a flat double*, allocate n*m. Then create a macro to access 2 dimenions. Will simplify greatly. Not a must fix. 
 int allocateMatrix(int n, int m, double *** matrix, double ** p)
 {
     int i = 0;
@@ -414,6 +418,7 @@ int allocateMatrix(int n, int m, double *** matrix, double ** p)
 
 void freeTempMatrix(double ** matrix, double * p)
 {
+    //CR: Can just free.
     if (matrix != NULL)
     {
         free(matrix);
@@ -424,6 +429,21 @@ void freeTempMatrix(double ** matrix, double * p)
     }
 }
 
+double averageMatrix(int n, double ** matrix)
+{
+    int i = 0;
+    int j = 0;
+    double sum = 0;
+
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < n; j ++)
+        {
+            sum += matrix[i][j];
+        }
+    }
+    return sum / (n * n);
+}
 
 /*
  * result (n x t) = A (n x m) * B (m x t)
