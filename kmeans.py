@@ -128,7 +128,6 @@ def calulate_k_means_final_project(vectors, k, iter, eps):
         centroids_index_dict[pair] = idx
 
     vectors_to_centroids = {}
-    print(len(vectors))
     for vector in vectors:
         centroid = assign_vector_to_cluster(vector, centroids_dict)
         vectors_to_centroids[vector] = centroids_index_dict[centroid]
