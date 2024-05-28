@@ -194,7 +194,7 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
 
     cleanup:
     fclose(f);
-    if(functionStatus == 1){
+    if(functionStatus == 1 && list!=NULL){
         freeVectorList(list);
     }
     return functionStatus;
