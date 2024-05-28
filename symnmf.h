@@ -16,7 +16,7 @@ void squaredDistance(int dimension, double coordinates1[], double coordinates2[]
 double rowSum(int n, double ** matrix, int rowIndex);
 void multiplyMatrix(int n, int m, int t, double ** matrixA, double ** matrixB, double ** matrixResult);
 int allocateMatrix(int n, int m, double *** matrix, double ** p);
-void freeTempMatrix(double ** matrix, double * p);
+void freeMatrix(double ** matrix, double * p);
 void transposeMatrix(int n, int m, double ** matrix, double ** resultMatrix);
 int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, int * vectorCount);
 void freeVectorList(node * head);

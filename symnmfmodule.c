@@ -67,8 +67,8 @@ static PyObject* calc_sym(PyObject *self, PyObject *args)
 
 /* free everything */
     cleanup:
-    freeTempMatrix(vectorMatrix, vectorMatrixP);
-    freeTempMatrix(similarityMatrix, similarityMatrixP);
+    freeMatrix(vectorMatrix, vectorMatrixP);
+    freeMatrix(similarityMatrix, similarityMatrixP);
 
     if (functionStatus == 0)
     {
@@ -158,9 +158,9 @@ static PyObject* calc_ddg(PyObject *self, PyObject *args)
 
 /* free everything */
     cleanup:
-    freeTempMatrix(vectorMatrix, vectorMatrixP);
-    freeTempMatrix(similarityMatrix, similarityMatrixP);
-    freeTempMatrix(degreeMatrix, degreeMatrixP);
+    freeMatrix(vectorMatrix, vectorMatrixP);
+    freeMatrix(similarityMatrix, similarityMatrixP);
+    freeMatrix(degreeMatrix, degreeMatrixP);
 
     if (functionStatus == 0)
     {
@@ -257,10 +257,10 @@ static PyObject* calc_norm(PyObject *self, PyObject *args)
 
 /* free everything */
     cleanup:
-    freeTempMatrix(vectorMatrix, vectorMatrixP);
-    freeTempMatrix(similarityMatrix, similarityMatrixP);
-    freeTempMatrix(degreeMatrix, degreeMatrixP);
-    freeTempMatrix(normalSimilarityMatrix, normalMatrixP);
+    freeMatrix(vectorMatrix, vectorMatrixP);
+    freeMatrix(similarityMatrix, similarityMatrixP);
+    freeMatrix(degreeMatrix, degreeMatrixP);
+    freeMatrix(normalSimilarityMatrix, normalMatrixP);
 
     if (functionStatus == 0)
     {
@@ -353,8 +353,8 @@ static PyObject* calc_symnmf(PyObject *self, PyObject *args)
     /* free everything */
     cleanup:
 
-    freeTempMatrix(normalSimilarityMatrix, normalSimilarityMatrixP);
-    freeTempMatrix(initialAssociationMatrix, initialAssociationMatrixP);
+    freeMatrix(normalSimilarityMatrix, normalSimilarityMatrixP);
+    freeMatrix(initialAssociationMatrix, initialAssociationMatrixP);
 
     if (functionStatus == 0)
     {
