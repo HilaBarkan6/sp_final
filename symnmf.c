@@ -104,7 +104,7 @@ int readVectorsFromFile(char * filePath, node ** vectorList, int * dimension, in
     double temp = 0;
     int tempDimension = 1;
     int tempCount = 0;
-    node * list;
+    node * list = NULL;
     node * tail;
     double * tempVector = NULL;
     int i = 0;
